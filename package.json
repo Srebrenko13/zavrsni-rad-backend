@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npx tsc",
-    "start": "node ./bin/www",
+    "start": "npx ts-node ./app.ts",
     "dev": "nodemon ./src/index.ts"
   },
   "dependencies": {
