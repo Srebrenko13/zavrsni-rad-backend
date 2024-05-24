@@ -26,20 +26,38 @@ const systemMessage : ChatCompletionMessageParam = {
     role: 'system',
     content: utils.systemSetup(),
 };
-
 history.push(systemMessage);
 
-// set starting prompt for the story theme
-userInterface.setPrompt("[bot]: Please give us a topic or short description of desired story:");
-userInterface.prompt();
+openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    response_format: {"type" : "json_object"},
+    messages: history
+});
 
-const startMessage : ChatCompletionMessageParam = {
-    role: 'user',
-    content: userInterface.line,
-};
+// set starting prompt for the story theme
+
+userInterface.question('[bot]: Please write desired topic/description for the game',
+    async (topic) => {
+    const startMessage: ChatCompletionMessageParam = {
+        role: 'user',
+        content: topic
+    }
+    history.push(startMessage);
+
+    const story = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        response_format: {"type" : "json_object"},
+        messages: history
+    });
+
+    console.log(String(story.choices[0]));
+    console.log("[bot]: " + String(story.choices[0].message));
+
+    userInterface.close();
+});
 
 // set prompt for user
-userInterface.setPrompt(`[bot]:Please choose one of the paths!`);
+userInterface.setPrompt(`[bot]: Please choose one of the paths!`);
 userInterface.prompt();
 
 // handle user input, process it and return the answer
@@ -61,7 +79,8 @@ userInterface.on('line', async (input) => {
     // display response to the user
     const responseMessage = completion.choices[0].message;
     if(responseMessage){
-        console.log('[bot]:' + String(responseMessage.content));
+        console.log(String(completion.choices[0]));
+        console.log('[bot]: ' + String(responseMessage.content));
         history.push({
             role: responseMessage.role,
             content: responseMessage.content
@@ -74,5 +93,5 @@ userInterface.on('line', async (input) => {
 
 // handle program exit
 userInterface.on('close', () => {
-    console.log('[server]:Thank you for using our bot!');
+    console.log('[bot]: Thank you for using our bot!');
 });
