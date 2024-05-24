@@ -3,8 +3,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const openai = new OpenAI({
-    apiKey: String(process.env.API_KEYv2),
-    organization: 'org-Fdvt1n7pv7J51vOnEs2TzDIf',
+    apiKey: process.env.API_KEYv2,
+    organization: process.env.ORG,
 
 });
 

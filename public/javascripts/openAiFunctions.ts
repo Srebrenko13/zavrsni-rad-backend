@@ -8,7 +8,7 @@ dotenv.config();
 const utils = new Utils();
 const openai = new OpenAI({
         apiKey: process.env.API_KEYv2,
-        organization: 'org-Fdvt1n7pv7J51vOnEs2TzDIf',
+        organization: process.env.ORG,
     }
 );
 
