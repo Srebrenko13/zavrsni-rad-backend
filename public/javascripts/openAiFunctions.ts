@@ -68,7 +68,21 @@ async function sendPrompt(ai: OpenAI, message: string, messages: ChatCompletionM
             content: story.choices[0].message.content
         })
     }
-    return printNode(story);
+    return printNode(ai, story);
+}
+
+async function getPictureFromApi(ai: OpenAI, description: string) : Promise<string> {
+    const response = await ai.images.generate({
+        model: "dall-e-2",
+        prompt: description,
+        size: "256x256",
+        quality: "standard",
+        n: 1
+    })
+    if(response){
+        return String(response.data[0].url);
+    }
+    else return "Failed to get url to the image!";
 }
 
  async function start(){
@@ -80,12 +94,14 @@ async function sendPrompt(ai: OpenAI, message: string, messages: ChatCompletionM
     userInterface.prompt();
 }
 
-function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : boolean{
+async function printNode(ai: OpenAI, input: OpenAI.Chat.Completions.ChatCompletion) : Promise<boolean>{
     const json = JSON.parse(<string>input.choices[0].message.content);
     console.log("Chapter " + json.chapter);
     console.log(json.story);
     console.log(json.gameEnded);
     if(json.gameEnded == false){
+        // uncomment for DALL-E image generation API calls
+        // console.log(await getPictureFromApi(openai, json.description));
         console.log("OPTIONS:");
         console.log("1: " + json.firstOpt);
         console.log("2: " + json.secondOpt);
