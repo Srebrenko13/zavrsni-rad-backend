@@ -76,12 +76,13 @@ async function sendPrompt(ai: OpenAI, message: string, messages: ChatCompletionM
     await sendPrompt(openai, topic, history);
 
     // set up user prompt and push it
-    userInterface.setPrompt(`[bot]: Please choose one of the paths!`);
+    userInterface.setPrompt(`[bot]: Please choose one of the paths! `);
     userInterface.prompt();
 }
 
 function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : boolean{
     const json = JSON.parse(<string>input.choices[0].message.content);
+    console.log("Chapter " + json.chapter);
     console.log(json.story);
     console.log(json.gameEnded);
     if(json.gameEnded == false){
@@ -105,7 +106,7 @@ userInterface.on('line', async (input) => {
 
 // handle program exit
 userInterface.on('close', () => {
-    console.log('[bot]: Thank you for using our bot!');
+    console.log('[bot]: Thank you for playing with us!');
 });
 
 // setup system settings and generate start of the story with options and first prompt
