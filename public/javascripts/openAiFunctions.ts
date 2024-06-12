@@ -3,6 +3,7 @@ import {ChatCompletionMessageParam} from "openai/resources/chat";
 import * as readline from 'readline';
 import * as dotenv from 'dotenv';
 import {Utils} from "./utils";
+import {StoryModel} from "../models/StoryModel";
 
 dotenv.config();
 const openai = new OpenAI({
@@ -10,69 +11,71 @@ const openai = new OpenAI({
         organization: process.env.ORG,
     }
 );
-const topic = "futuristic city on another planet";
-
-// create message array to store history in current conversation with our bot
-const history: ChatCompletionMessageParam[] = [];
-
-const userInterface = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
 
 /* configure bot about what we want from him and how to return/output the response in this case JSON file with
    specific fields, like story, description, choices, depth etc. */
-async function setupSystemSettings(ai: OpenAI, messages: ChatCompletionMessageParam[]){
+async function setupSystemSettings(topic: string): Promise<StoryModel>{
     // generate prompt and save it to chat history
+    const history: ChatCompletionMessageParam[] = [];
     const systemMessage : ChatCompletionMessageParam = {
         role: 'system',
         content: Utils.systemSetup(),
     };
-    messages.push(systemMessage);
+    history.push(systemMessage);
+
+    const topicMessage: ChatCompletionMessageParam = {
+        role: 'user',
+        content: topic
+    }
+
+    history.push(topicMessage);
 
     // call api for response
-    const answer = await ai.chat.completions.create({
+    const answer = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         response_format: {"type" : "json_object"},
-        messages: history
+        messages: history,
+        temperature: 1.3
     });
 
     // save response to chat history
     if(answer){
-        messages.push({
+        history.push({
             role: answer.choices[0].message.role,
             content: answer.choices[0].message.content
         })
     }
+    return parseResponse(answer, history);
 }
 
-async function sendPrompt(ai: OpenAI, message: string, messages: ChatCompletionMessageParam[]) : Promise<boolean>{
+async function sendPrompt(message: string, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
     // generate topic message and save it to message history
     const prompt: ChatCompletionMessageParam = {
         role: 'user',
         content: message
     }
-    messages.push(prompt);
+    history.push(prompt);
 
     // call api for response
-    const story = await ai.chat.completions.create({
+    const story = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         response_format: {"type" : "json_object"},
-        messages: messages
+        messages: history,
+        temperature: 1.3
     });
 
     // save response to chat history
     if(story){
-        messages.push({
+        history.push({
             role: story.choices[0].message.role,
             content: story.choices[0].message.content
         })
     }
-    return printNode(ai, story);
+    return parseResponse(story, history);
 }
 
-async function getPictureFromApi(ai: OpenAI, description: string) : Promise<string> {
-    const response = await ai.images.generate({
+async function getPictureFromApi(description: string) : Promise<string> {
+    const response = await openai.images.generate({
         model: "dall-e-2",
         prompt: description,
         size: "256x256",
@@ -85,16 +88,7 @@ async function getPictureFromApi(ai: OpenAI, description: string) : Promise<stri
     else return "Failed to get url to the image!";
 }
 
- async function start(){
-    await setupSystemSettings(openai, history);
-    await sendPrompt(openai, topic, history);
-
-    // set up user prompt and push it
-    userInterface.setPrompt(`[bot]: Please choose one of the paths! `);
-    userInterface.prompt();
-}
-
-async function printNode(ai: OpenAI, input: OpenAI.Chat.Completions.ChatCompletion) : Promise<boolean>{
+async function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : Promise<boolean>{
     const json = JSON.parse(<string>input.choices[0].message.content);
     console.log("Chapter " + json.chapter);
     console.log(json.story);
@@ -111,19 +105,20 @@ async function printNode(ai: OpenAI, input: OpenAI.Chat.Completions.ChatCompleti
     else return true;
 }
 
-// handle user input, process it and return the answer
-userInterface.on('line', async (input) => {
-    // create request message and add it to history array
-    const status = await sendPrompt(openai, input, history);
-    // prompt user for next answer
-    if(!status) userInterface.prompt();
-    else userInterface.close();
-});
+async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, history: ChatCompletionMessageParam[]): Promise<StoryModel>{
+    const json = JSON.parse(<string>input.choices[0].message.content);
+    const response: StoryModel = {
+        "chapter": parseInt(json.chapter),
+        "description": json.description,
+        "story": json.story,
+        "picture": "../images/Test image.png",
+        "option_1": json.firstOpt,
+        "option_2": json.secondOpt,
+        "option_3": json.thirdOpt,
+        "game_finished": json.gameEnded,
+        "history": history,
+    }
+    return response;
+}
 
-// handle program exit
-userInterface.on('close', () => {
-    console.log('[bot]: Thank you for playing with us!');
-});
-
-// setup system settings and generate start of the story with options and first prompt
-start();
+export {sendPrompt, setupSystemSettings, getPictureFromApi};
