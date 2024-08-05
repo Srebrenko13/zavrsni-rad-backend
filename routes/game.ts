@@ -1,7 +1,7 @@
 import express, {Application, Express, Router} from "express";
 import {ChatCompletionMessageParam} from "openai/resources/chat";
 const router = Router();
-import {sendPrompt, setupSystemSettings} from '../public/javascripts/openAiFunctions'
+import {sendPrompt, setupSystemSettings} from '../public/typescripts/openAiFunctions'
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {

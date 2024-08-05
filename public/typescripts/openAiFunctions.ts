@@ -1,6 +1,5 @@
 import {OpenAI} from "openai";
 import {ChatCompletionMessageParam} from "openai/resources/chat";
-import * as readline from 'readline';
 import * as dotenv from 'dotenv';
 import {Utils} from "./utils";
 import {StoryModel} from "../models/StoryModel";
@@ -32,7 +31,7 @@ async function setupSystemSettings(topic: string): Promise<StoryModel>{
 
     // call api for response
     const answer = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         response_format: {"type" : "json_object"},
         messages: history,
         temperature: 1.3
@@ -58,7 +57,7 @@ async function sendPrompt(message: string, history: ChatCompletionMessageParam[]
 
     // call api for response
     const story = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         response_format: {"type" : "json_object"},
         messages: history,
         temperature: 1.3
@@ -107,18 +106,17 @@ async function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : Promis
 
 async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, history: ChatCompletionMessageParam[]): Promise<StoryModel>{
     const json = JSON.parse(<string>input.choices[0].message.content);
-    const response: StoryModel = {
-        "chapter": parseInt(json.chapter),
-        "description": json.description,
-        "story": json.story,
-        "picture": "../images/Test image.png",
-        "option_1": json.firstOpt,
-        "option_2": json.secondOpt,
-        "option_3": json.thirdOpt,
-        "game_finished": json.gameEnded,
-        "history": history,
-    }
-    return response;
+    return {
+        chapter: parseInt(json.chapter),
+        description: json.description,
+        story: json.story,
+        picture: "../images/Test image.png",
+        option_1: json.firstOpt,
+        option_2: json.secondOpt,
+        option_3: json.thirdOpt,
+        game_finished: json.gameEnded,
+        history: history,
+    };
 }
 
 export {sendPrompt, setupSystemSettings, getPictureFromApi};
