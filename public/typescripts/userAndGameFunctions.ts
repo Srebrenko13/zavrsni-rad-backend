@@ -1,20 +1,14 @@
 import {AccountData} from "../models/AccountData";
+import {fillData} from "./databaseFunctions";
 
 async function handleLogin(username: string, password: string): Promise<AccountData> {
-
 
     return fillData();
 }
 
-async function fillData(): Promise<AccountData> {
-    return {
-        id: 1,
-        username: "Test",
-        email: "test@test.com",
-        loginStatus: true,
-        role: "user",
-        history: "empty history"
-    }
+async function handleRegister(username: string, email: string, password: string): Promise<AccountData>{
+
+    return fillData();
 }
 
-export {handleLogin};
+export {handleLogin, handleRegister};
