@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npx tsc",
-    "start": "npx ts-node ./app.ts",
+    "start": "npx tsx ./app.ts",
     "dev": "nodemon ./src/index.ts"
   },
   "dependencies": {
@@ -18,7 +18,8 @@
     "express": "^4.19.2",
     "morgan": "~1.9.1",
     "openai": "^4.47.1",
-    "ts-postgres": "^2.0.4"
+    "ts-postgres": "^2.0.4",
+    "tsx": "^4.16.5"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

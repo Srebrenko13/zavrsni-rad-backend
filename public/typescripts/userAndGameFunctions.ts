@@ -1,12 +1,16 @@
 import {AccountData} from "../models/AccountData";
-import {fillData} from "./databaseFunctions";
+import {createAccount, fillData, registerCheck} from "./databaseFunctions";
+import {RegisterInfo} from "../models/RegisterInfo";
+import {LoginInfo} from "../models/LoginInfo";
 
-async function handleLogin(username: string, password: string): Promise<AccountData> {
+async function handleLogin(data: LoginInfo): Promise<AccountData> {
 
     return fillData();
 }
 
-async function handleRegister(username: string, email: string, password: string): Promise<AccountData>{
+async function handleRegister(data: RegisterInfo): Promise<AccountData>{
+    const exists = await registerCheck(data.user, data.email);
+    if(!exists.emailExists && !exists.usernameExists) await createAccount(data.user, data.email, data.password);
 
     return fillData();
 }

@@ -8,15 +8,16 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/login', async function(req, res, next){
-    console.log("Got login information from frontend!\nUsername: " + req.body.user + "\nPassword: " + req.body.passwordHash);
-    const response = await handleLogin(req.body.user, req.body.passwordHash);
+    console.log("Got login information from frontend!\nUsername: " + req.body.user + "\nPassword: " + req.body.password);
+    const response = await handleLogin(req.body);
     res.send(response);
 });
 
 router.post('/register', async function (req, res, next) {
     console.log("Got register information from frontend!\nUsername: " + req.body.user + "\nEmail: " + req.body.email
-    + "\nPassword: " + req.body.passwordHash);
-    const response = await handleRegister(req.body.username, req.body.email, req.body.password);
+    + "\nPassword: " + req.body.password + "\nUsername length: " + req.body.user.length + "\nEmail length: "
+    + req.body.email.length + "\nPassword length: " + req.body.password.length);
+    const response = await handleRegister(req.body);
     res.send(response);
 });
 

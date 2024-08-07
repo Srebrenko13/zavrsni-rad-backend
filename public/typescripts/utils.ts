@@ -9,4 +9,10 @@ on a given theme or short description. The story MUST end at the 5 chapter or be
  story is done, should be true when 5th chapter is reached). Also please format JSON in proper way so I 
  can parse it later in my code. Some choices can lead to early ending of the game.`
     }
+
+    static databaseInfo = {
+        "user": "postgres",
+        "password": "password",
+        "database": "zavrsni"
+    }
 }

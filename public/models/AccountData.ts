@@ -4,5 +4,4 @@ export interface AccountData{
     email: string;
     loginStatus: boolean;
     role: string;
-    history?: string;
 }

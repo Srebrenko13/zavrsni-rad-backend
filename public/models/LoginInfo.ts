@@ -1,4 +1,4 @@
 export interface LoginInfo {
     user: string,
-    passwordHash: string
+    password: string
 }
