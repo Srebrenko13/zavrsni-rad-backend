@@ -1,3 +1,6 @@
+import {AccountData} from "../models/AccountData";
+import {DatabaseStatus} from "../models/DatabaseStatus";
+
 export class Utils{
     static systemSetup(){
         return `I would like you to create nonlinear storytelling game with 5 chapters story based 
@@ -14,5 +17,13 @@ on a given theme or short description. The story MUST end at the 5 chapter or be
         "user": "postgres",
         "password": "password",
         "database": "zavrsni"
+    }
+
+    static isAccountData(obj: any): obj is AccountData{
+        return (obj as AccountData).id !== undefined;
+    }
+    static isDatabaseStatus(obj: any): obj is DatabaseStatus{
+    return (obj as DatabaseStatus).emailExists !== undefined ||
+        (obj as DatabaseStatus).otherError !== undefined;
     }
 }
