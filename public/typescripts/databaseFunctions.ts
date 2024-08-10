@@ -73,7 +73,7 @@ async function createAccount(username: string, email: string, password: string):
 async function loadUserData(username: string): Promise<AccountData | DatabaseStatus>{
     const client = await connect(Utils.databaseInfo);
     const query =
-        {text: "SELECT userid, username, email, userrole, datecreated FROM users WHERE username = $1;"}
+        {text: "SELECT userid, username, email, userrole, datecreated, aboutme FROM users WHERE username = $1;"}
     const result = await client.query(query, [username]);
     if(result.rows.length !== 1) return {loadingFailed: true}
     const response: AccountData = {
@@ -82,7 +82,8 @@ async function loadUserData(username: string): Promise<AccountData | DatabaseSta
         email: result.rows[0][result.names.indexOf('email')],
         role: result.rows[0][result.names.indexOf('userrole')],
         loginStatus: true,
-        dateCreated: new Date(result.rows[0][result.names.indexOf('datecreated')])
+        dateCreated: new Date(result.rows[0][result.names.indexOf('datecreated')]),
+        aboutMe: result.rows[0][result.names.indexOf('aboutme')]
     }
     console.log(response);
 

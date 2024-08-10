@@ -4,5 +4,6 @@ export interface AccountData{
     email: string;
     loginStatus: boolean;
     role: string;
-    dateCreated: Date
+    dateCreated: Date;
+    aboutMe?: string;
 }
