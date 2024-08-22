@@ -85,9 +85,8 @@ async function loadUserData(username: string): Promise<AccountData | DatabaseSta
         dateCreated: new Date(result.rows[0][result.names.indexOf('datecreated')]),
         aboutMe: result.rows[0][result.names.indexOf('aboutme')]
     }
-    console.log(response);
 
     return response;
 }
 
-export { registerCheck,createAccount, loadUserData, loginCheck};
+export {registerCheck,createAccount, loadUserData, loginCheck};

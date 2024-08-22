@@ -13,7 +13,7 @@ const openai = new OpenAI({
 
 /* configure bot about what we want from him and how to return/output the response in this case JSON file with
    specific fields, like story, description, choices, depth etc. */
-async function setupSystemSettings(topic: string): Promise<StoryModel>{
+async function setupSystemSettings(topic: string, chapters: number): Promise<StoryModel>{
     // generate prompt and save it to chat history
     const history: ChatCompletionMessageParam[] = [];
     const systemMessage : ChatCompletionMessageParam = {
@@ -24,8 +24,10 @@ async function setupSystemSettings(topic: string): Promise<StoryModel>{
 
     const topicMessage: ChatCompletionMessageParam = {
         role: 'user',
-        content: topic
+        content: "{topic: " + topic + ", chapters: " + chapters + "}",
     }
+
+    console.log(topicMessage);
 
     history.push(topicMessage);
 
@@ -47,13 +49,21 @@ async function setupSystemSettings(topic: string): Promise<StoryModel>{
     return parseResponse(answer, history);
 }
 
-async function sendPrompt(message: string, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
+async function sendPrompt(message: string , chapter: number, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
     // generate topic message and save it to message history
     const prompt: ChatCompletionMessageParam = {
         role: 'user',
         content: message
     }
     history.push(prompt);
+
+    if(chapter == 4){
+        const endPrompt: ChatCompletionMessageParam = {
+            role: 'system',
+            content: Utils.endGamePrompt
+        }
+        history.push(endPrompt);
+    }
 
     // call api for response
     const story = await openai.chat.completions.create({
@@ -110,7 +120,7 @@ async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, hist
         chapter: parseInt(json.chapter),
         description: json.description,
         story: json.story,
-        picture: "../images/Test image.png",
+        picture: "Test image.png",
         option_1: json.firstOpt,
         option_2: json.secondOpt,
         option_3: json.thirdOpt,

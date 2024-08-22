@@ -1,4 +1,4 @@
-import express, {Application, Express} from "express";
+import express from "express";
 import * as dotenv from 'dotenv';
 const path = require('path');
 const logger = require('morgan');
