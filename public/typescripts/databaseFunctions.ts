@@ -89,4 +89,11 @@ async function loadUserData(username: string): Promise<AccountData | DatabaseSta
     return response;
 }
 
-export {registerCheck,createAccount, loadUserData, loginCheck};
+async function editAbout(username: string, about: string): Promise<boolean>{
+    const client = await connect(Utils.databaseInfo);
+    const query = {text: "UPDATE users SET aboutme = $1 WHERE username = $2"};
+    const result = await client.query(query, [about, username]);
+    return result.status === 'UPDATE 1';
+}
+
+export {registerCheck,createAccount, loadUserData, loginCheck, editAbout};

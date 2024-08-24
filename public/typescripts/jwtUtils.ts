@@ -1,4 +1,4 @@
-import jwt, {JwtPayload, Secret} from "jsonwebtoken";
+import jwt, {Secret} from "jsonwebtoken";
 import {NextFunction, Request, Response} from "express";
 
 const SECRET_KEY: Secret = process.env.SESSION_SECRET || "something to fill in the gaps";

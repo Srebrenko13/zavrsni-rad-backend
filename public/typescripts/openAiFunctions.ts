@@ -27,8 +27,6 @@ async function setupSystemSettings(topic: string, chapters: number): Promise<Sto
         content: "{topic: " + topic + ", chapters: " + chapters + "}",
     }
 
-    console.log(topicMessage);
-
     history.push(topicMessage);
 
     // call api for response
@@ -49,7 +47,7 @@ async function setupSystemSettings(topic: string, chapters: number): Promise<Sto
     return parseResponse(answer, history);
 }
 
-async function sendPrompt(message: string , chapter: number, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
+async function sendPrompt(message: string , gameEnding: boolean, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
     // generate topic message and save it to message history
     const prompt: ChatCompletionMessageParam = {
         role: 'user',
@@ -57,7 +55,8 @@ async function sendPrompt(message: string , chapter: number, history: ChatComple
     }
     history.push(prompt);
 
-    if(chapter == 4){
+    // check if game is ending, remind AI that it has to finish the game
+    if(gameEnding){
         const endPrompt: ChatCompletionMessageParam = {
             role: 'system',
             content: Utils.endGamePrompt
