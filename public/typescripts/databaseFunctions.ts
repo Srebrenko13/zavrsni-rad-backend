@@ -23,10 +23,7 @@ async function checkPassword(username: string, password: string, client: Client)
     const result = await client.query(query, [username]);
     if(result.rows.length === 1){
         const hash = result.rows[0][result.names.indexOf('password')];
-        console.log("Loaded password hash from database: " + hash);
-        const compare = compareSync(password, hash);
-        console.log("Passwords match: " + compare);
-        return compare;
+        return compareSync(password, hash);
     } else return false;
 }
 
@@ -66,7 +63,6 @@ async function createAccount(username: string, email: string, password: string):
     const query = {text: "INSERT INTO users (username, email, password) VALUES ($1, $2, $3);"};
     const result = await client.query(query, [username, email, hash]);
 
-    console.log("Account successfully created: " + (result.status === "INSERT 0 1"));
     return (result.status === "INSERT 0 1");
 }
 
@@ -96,4 +92,15 @@ async function editAbout(username: string, about: string): Promise<boolean>{
     return result.status === 'UPDATE 1';
 }
 
-export {registerCheck,createAccount, loadUserData, loginCheck, editAbout};
+async function saveGame(userid: number, topic: string, numberOfChapters: number, chapters: [Object], options: [number]): Promise<boolean>{
+    const client = await connect(Utils.databaseInfo);
+    const query =
+        {text: "INSERT INTO games (userid, topic, numberofchapters, chapters, chosenoptions) VALUES ($1, $2, $3, $4, $5)"};
+    const result = await
+        client.query(query, [userid, topic, numberOfChapters, chapters, options]);
+
+    console.log(result);
+    return result.status === 'INSERT 0 1';
+}
+
+export {registerCheck,createAccount, loadUserData, loginCheck, editAbout, saveGame};

@@ -115,11 +115,12 @@ async function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : Promis
 
 async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, history: ChatCompletionMessageParam[]): Promise<StoryModel>{
     const json = JSON.parse(<string>input.choices[0].message.content);
+    // const image = await getPictureFromApi(json.description);
     return {
         chapter: parseInt(json.chapter),
         description: json.description,
         story: json.story,
-        picture: "Test image.png",
+        picture: "testimage.jpg",
         option_1: json.firstOpt,
         option_2: json.secondOpt,
         option_3: json.thirdOpt,
