@@ -5,14 +5,14 @@ import {Utils} from "./utils";
 import {compareSync, hashSync} from "bcrypt-ts";
 
 async function usernameExists(username: string, client: Client): Promise<boolean>{
-    const query = {text: "SELECT * FROM users WHERE username = $1;"};
+    const query = {text: "SELECT username FROM users WHERE username = $1;"};
     const result = await client.query(query, [username]);
 
     return result.rows.length !== 0;
 }
 
 async function emailExists(email: string, client: Client): Promise<boolean>{
-    const query = {text: "SELECT * FROM users WHERE email = $1;"};
+    const query = {text: "SELECT email FROM users WHERE email = $1;"};
     const result = await client.query(query, [email]);
 
     return result.rows.length !== 0;
@@ -68,21 +68,31 @@ async function createAccount(username: string, email: string, password: string):
 
 async function loadUserData(username: string): Promise<AccountData | DatabaseStatus>{
     const client = await connect(Utils.databaseInfo);
+    let response;
     const query =
-        {text: "SELECT userid, username, email, userrole, datecreated, aboutme FROM users WHERE username = $1;"}
-    const result = await client.query(query, [username]);
-    if(result.rows.length !== 1) return {loadingFailed: true}
-    const response: AccountData = {
-        id: result.rows[0][result.names.indexOf('userid')],
-        username: result.rows[0][result.names.indexOf('username')],
-        email: result.rows[0][result.names.indexOf('email')],
-        role: result.rows[0][result.names.indexOf('userrole')],
-        loginStatus: true,
-        dateCreated: new Date(result.rows[0][result.names.indexOf('datecreated')]),
-        aboutMe: result.rows[0][result.names.indexOf('aboutme')]
+        {text: "SELECT userid, username, email, datecreated, aboutme FROM users WHERE username = $1;"}
+    try{
+        const result = await client.query(query, [username]);
+        if(result.rows.length !== 1) {
+            return {loadingFailed: true}
+        }
+        response = {
+            id: result.rows[0][result.names.indexOf('userid')],
+            username: result.rows[0][result.names.indexOf('username')],
+            email: result.rows[0][result.names.indexOf('email')],
+            loginStatus: true,
+            dateCreated: new Date(result.rows[0][result.names.indexOf('datecreated')]),
+            aboutMe: result.rows[0][result.names.indexOf('aboutme')]
+        }
+    } catch(err){
+        console.log(err);
+    } finally{
+        console.log("I'm here!");
+        console.log(response);
+        // await client.end();
     }
-
-    return response;
+    if(response !== undefined) return response;
+    else return {loadingFailed: true};
 }
 
 async function editAbout(username: string, about: string): Promise<boolean>{
@@ -95,9 +105,9 @@ async function editAbout(username: string, about: string): Promise<boolean>{
 async function saveGame(userid: number, topic: string, numberOfChapters: number, chapters: [Object], options: [number]): Promise<boolean>{
     const client = await connect(Utils.databaseInfo);
     const query =
-        {text: "INSERT INTO games (userid, topic, numberofchapters, chapters, chosenoptions) VALUES ($1, $2, $3, $4, $5)"};
+        {text: "INSERT INTO games (userid, topic, numberofchapters) VALUES ($1, $2, $3)"};
     const result = await
-        client.query(query, [userid, topic, numberOfChapters, chapters, options]);
+        client.query(query, [userid, topic, numberOfChapters]);
 
     console.log(result);
     return result.status === 'INSERT 0 1';

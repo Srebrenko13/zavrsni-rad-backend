@@ -10,5 +10,6 @@ export interface StoryModel{
     option_2?: string;
     option_3?: string;
     game_finished: boolean;
+    chosen_option?: number;
     history?: ChatCompletionMessageParam[];
 }
