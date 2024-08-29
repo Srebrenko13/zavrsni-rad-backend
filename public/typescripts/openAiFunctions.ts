@@ -3,6 +3,7 @@ import {ChatCompletionMessageParam} from "openai/resources/chat";
 import * as dotenv from 'dotenv';
 import {Utils} from "./utils";
 import {StoryModel} from "../models/StoryModel";
+import axios from "axios";
 
 dotenv.config();
 const openai = new OpenAI({
@@ -47,12 +48,33 @@ async function setupSystemSettings(topic: string, chapters: number): Promise<Sto
     return parseResponse(answer, history);
 }
 
+function setupGameReplay(previousChapters: StoryModel[], chapters: number): ChatCompletionMessageParam[]{
+    const history: ChatCompletionMessageParam[] = [];
+
+    const replayMessage: ChatCompletionMessageParam = {
+        role: 'system',
+        content: Utils.replaySetup(),
+    };
+    history.push(replayMessage);
+
+    const previous: ChatCompletionMessageParam = {
+        role: 'user',
+        content: "{number_of_chapters: " + chapters + ", previous_chapters: " + JSON.stringify(previousChapters) + "}"
+    }
+    history.push(previous);
+    console.log(history);
+
+    return history;
+}
+
 async function sendPrompt(message: string , gameEnding: boolean, history: ChatCompletionMessageParam[]) : Promise<StoryModel>{
     // generate topic message and save it to message history
     const prompt: ChatCompletionMessageParam = {
         role: 'user',
         content: message
     }
+    console.log
+    console.log(prompt);
     history.push(prompt);
 
     // check if game is ending, remind AI that it has to finish the game
@@ -91,7 +113,14 @@ async function getPictureFromApi(description: string) : Promise<string> {
         n: 1
     })
     if(response){
-        return String(response.data[0].url);
+        return await axios.post("https://panki.vrw.hr/img2url/api/url", {url: String(response.data[0].url)})
+            .then((response) =>{
+                console.log(response.data);
+                console.log(response.data.url);
+                return response.data.url;
+            }).catch((err) => {
+                console.log("Failed to load image.");
+            });
     }
     else return "Failed to get url to the image!";
 }
@@ -115,12 +144,12 @@ async function printNode(input: OpenAI.Chat.Completions.ChatCompletion) : Promis
 
 async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, history: ChatCompletionMessageParam[]): Promise<StoryModel>{
     const json = JSON.parse(<string>input.choices[0].message.content);
-    // const image = await getPictureFromApi(json.description);
+    const image = await getPictureFromApi(json.description);
     return {
         chapter: parseInt(json.chapter),
         description: json.description,
         story: json.story,
-        picture: "testimage.jpg",
+        picture: image,
         option_1: json.firstOpt,
         option_2: json.secondOpt,
         option_3: json.thirdOpt,
@@ -129,4 +158,4 @@ async function parseResponse(input: OpenAI.Chat.Completions.ChatCompletion, hist
     };
 }
 
-export {sendPrompt, setupSystemSettings, getPictureFromApi};
+export {sendPrompt, setupSystemSettings, getPictureFromApi, setupGameReplay};

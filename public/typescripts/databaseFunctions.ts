@@ -3,6 +3,8 @@ import {DatabaseStatus} from "../models/DatabaseStatus";
 import {Client, connect} from 'ts-postgres';
 import {Utils} from "./utils";
 import {compareSync, hashSync} from "bcrypt-ts";
+import {StoryModel} from "../models/StoryModel";
+import {GameInfo} from "../models/GameInfo";
 
 async function usernameExists(username: string, client: Client): Promise<boolean>{
     const query = {text: "SELECT username FROM users WHERE username = $1;"};
@@ -87,8 +89,6 @@ async function loadUserData(username: string): Promise<AccountData | DatabaseSta
     } catch(err){
         console.log(err);
     } finally{
-        console.log("I'm here!");
-        console.log(response);
         // await client.end();
     }
     if(response !== undefined) return response;
@@ -102,15 +102,73 @@ async function editAbout(username: string, about: string): Promise<boolean>{
     return result.status === 'UPDATE 1';
 }
 
-async function saveGame(userid: number, topic: string, numberOfChapters: number, chapters: [Object], options: [number]): Promise<boolean>{
-    const client = await connect(Utils.databaseInfo);
-    const query =
-        {text: "INSERT INTO games (userid, topic, numberofchapters) VALUES ($1, $2, $3)"};
-    const result = await
-        client.query(query, [userid, topic, numberOfChapters]);
-
+async function deleteGame(client: Client, gameid: number){
+    let query = {text: "DELETE FROM games WHERE gameid = $1"};
+    const result = await client.query(query, [gameid]);
     console.log(result);
-    return result.status === 'INSERT 0 1';
 }
 
-export {registerCheck,createAccount, loadUserData, loginCheck, editAbout, saveGame};
+async function saveGame(userid: number, topic: string, chapters: [StoryModel]): Promise<boolean>{
+    const client = await connect(Utils.databaseInfo);
+    let query =
+        {text: "INSERT INTO games (userid, topic, numberofchapters) VALUES ($1, $2, $3)"};
+    let result = await
+        client.query(query, [userid, topic, chapters.length]);
+
+    if(result.status === 'INSERT 0 1'){
+        query = {text: "SELECT gameid FROM games ORDER BY dateplayed DESC LIMIT 1;"};
+        result = await client.query(query);
+        const gameid = result.rows[0][result.names.indexOf('gameid')];
+
+        query = {text: "INSERT INTO chapters (gameid, chapter_number, description, story," +
+                "option_1, option_2, option_3, game_finished, chosen_option, picture) VALUES ($1, $2, $3," +
+                "$4, $5, $6, $7, $8, $9, $10)"};
+        for(let i = 0; i < chapters.length; i++){
+            const chapter = chapters[i];
+            result = await
+                client.query(query, [gameid, chapter.chapter, chapter.description, chapter.story,
+                chapter.option_1, chapter.option_2, chapter.option_3, chapter.game_finished, chapter.chosen_option, chapter.picture]);
+            if(result.status !== "INSERT 0 1"){
+                await deleteGame(client, gameid);
+                return false;
+            }
+        }
+    } else return false;
+    return true;
+}
+
+async function loadGames(userid: number): Promise<GameInfo[]> {
+    const client = await connect(Utils.databaseInfo);
+    let query =
+        {text: "SELECT gameid, topic, numberofchapters FROM games WHERE userid = $1 ORDER BY dateplayed DESC;"};
+    const result = await client.query(query, [userid]);
+    let response: GameInfo[] = [];
+    for(let i = 0; i < result.rows.length; i++){
+        const row: GameInfo = {
+            game_id: result.rows[i][result.names.indexOf("gameid")],
+            topic: result.rows[i][result.names.indexOf("topic")],
+            number_of_chapters: result.rows[i][result.names.indexOf("numberofchapters")]
+        };
+        response.push(row);
+    }
+    return response;
+}
+
+async function loadChapter(game_id: number, chapter: number): Promise<StoryModel>{
+    const client = await connect(Utils.databaseInfo);
+    let query = {text: "SELECT * FROM chapters WHERE gameid = $1 AND chapter_number = $2"};
+    const result = await client.query(query, [game_id, chapter]);
+    return{
+        chapter: result.rows[0][result.names.indexOf('chapter_number')],
+        description: result.rows[0][result.names.indexOf('description')],
+        story: result.rows[0][result.names.indexOf('story')],
+        picture: result.rows[0][result.names.indexOf('picture')],
+        option_1: result.rows[0][result.names.indexOf('option_1')],
+        option_2: result.rows[0][result.names.indexOf('option_2')],
+        option_3: result.rows[0][result.names.indexOf('option_3')],
+        game_finished: result.rows[0][result.names.indexOf('game_finished')],
+        chosen_option: result.rows[0][result.names.indexOf('chosen_option')]
+    }
+}
+
+export {registerCheck,createAccount, loadUserData, loginCheck, editAbout, saveGame, loadGames, loadChapter};
