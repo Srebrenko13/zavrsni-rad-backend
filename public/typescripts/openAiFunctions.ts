@@ -62,7 +62,6 @@ function setupGameReplay(previousChapters: StoryModel[], chapters: number): Chat
         content: "{number_of_chapters: " + chapters + ", previous_chapters: " + JSON.stringify(previousChapters) + "}"
     }
     history.push(previous);
-    console.log(history);
 
     return history;
 }
@@ -73,8 +72,6 @@ async function sendPrompt(message: string , gameEnding: boolean, history: ChatCo
         role: 'user',
         content: message
     }
-    console.log
-    console.log(prompt);
     history.push(prompt);
 
     // check if game is ending, remind AI that it has to finish the game
