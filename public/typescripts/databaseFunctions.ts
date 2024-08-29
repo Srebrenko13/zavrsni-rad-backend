@@ -157,7 +157,16 @@ async function loadGames(userid: number): Promise<GameInfo[]> {
 async function loadChapter(game_id: number, chapter: number): Promise<StoryModel>{
     const client = await connect(Utils.databaseInfo);
     let query = {text: "SELECT * FROM chapters WHERE gameid = $1 AND chapter_number = $2"};
-    const result = await client.query(query, [game_id, chapter]);
+    let result: any;
+
+    try{
+        result = await client.query(query, [game_id, chapter]);
+    } catch(err){
+        console.log("Error loading chapter", err);
+    } finally {
+        // await client.end();
+    }
+
     return{
         chapter: result.rows[0][result.names.indexOf('chapter_number')],
         description: result.rows[0][result.names.indexOf('description')],
